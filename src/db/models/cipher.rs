@@ -11,7 +11,7 @@ use serde_json::Value;
 
 use super::{
     Attachment, CollectionCipher, CollectionId, Favorite, FolderCipher, FolderId, Group, Membership, MembershipStatus,
-    MembershipType, OrganizationId, User, UserId,
+    MembershipType, OrganizationId, TagCipher, TagId, User, UserId,
 };
 use crate::api::core::{CipherData, CipherSyncData, CipherSyncType};
 use macros::UuidFromParam;
@@ -325,6 +325,16 @@ impl Cipher {
             Cow::from(self.get_admin_collections(user_uuid.clone(), conn).await)
         };
 
+        let tag_ids: Cow<'_, Vec<TagId>> = if let Some(cipher_sync_data) = cipher_sync_data {
+            if let Some(cipher_tags) = cipher_sync_data.cipher_tags.get(&self.uuid) {
+                Cow::Borrowed(cipher_tags)
+            } else {
+                Cow::Owned(Vec::with_capacity(0))
+            }
+        } else {
+            Cow::Owned(TagCipher::find_by_cipher(&self.uuid, conn).await)
+        };
+
         // There are three types of cipher response models in upstream
         // Bitwarden: "cipherMini", "cipher", and "cipherDetails" (in order
         // of increasing level of detail). vaultwarden currently only
@@ -349,6 +359,9 @@ impl Cipher {
 
             // This field is specific to the cipherDetails type.
             "collectionIds": collection_ids,
+
+            // Passwarden extension: tags for vault items
+            "tagIds": tag_ids,
 
             "name": self.name,
             "notes": self.notes,
@@ -472,6 +485,7 @@ impl Cipher {
 
         FolderCipher::delete_all_by_cipher(&self.uuid, conn).await?;
         CollectionCipher::delete_all_by_cipher(&self.uuid, conn).await?;
+        TagCipher::delete_all_by_cipher(&self.uuid, conn).await?;
         Attachment::delete_all_by_cipher(&self.uuid, conn).await?;
         Favorite::delete_all_by_cipher(&self.uuid, conn).await?;
 

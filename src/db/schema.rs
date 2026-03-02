@@ -343,6 +343,26 @@ table! {
     }
 }
 
+table! {
+    tags (uuid) {
+        uuid -> Text,
+        user_uuid -> Text,
+        name -> Text,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
+    }
+}
+
+table! {
+    ciphers_tags (cipher_uuid, tag_uuid) {
+        cipher_uuid -> Text,
+        tag_uuid -> Text,
+    }
+}
+
+joinable!(ciphers_tags -> ciphers (cipher_uuid));
+joinable!(ciphers_tags -> tags (tag_uuid));
+joinable!(tags -> users (user_uuid));
 joinable!(attachments -> ciphers (cipher_uuid));
 joinable!(ciphers -> organizations (organization_uuid));
 joinable!(ciphers -> users (user_uuid));
@@ -397,4 +417,6 @@ allow_tables_to_appear_in_same_query!(
     collections_groups,
     event,
     auth_requests,
+    tags,
+    ciphers_tags,
 );

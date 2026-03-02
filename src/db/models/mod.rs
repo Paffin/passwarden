@@ -12,6 +12,7 @@ mod org_policy;
 mod organization;
 mod send;
 mod sso_auth;
+mod tag;
 mod two_factor;
 mod two_factor_duo_context;
 mod two_factor_incomplete;
@@ -37,6 +38,7 @@ pub use self::send::{
     Send, SendType,
 };
 pub use self::sso_auth::{OIDCAuthenticatedUser, OIDCCodeWrapper, SsoAuth};
+pub use self::tag::{Tag, TagCipher, TagId};
 pub use self::two_factor::{TwoFactor, TwoFactorType};
 pub use self::two_factor_duo_context::TwoFactorDuoContext;
 pub use self::two_factor_incomplete::TwoFactorIncomplete;

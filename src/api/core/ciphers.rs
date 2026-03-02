@@ -21,7 +21,7 @@ use crate::{
         models::{
             Attachment, AttachmentId, Cipher, CipherId, Collection, CollectionCipher, CollectionGroup, CollectionId,
             CollectionUser, EventType, Favorite, Folder, FolderCipher, FolderId, Group, Membership, MembershipType,
-            OrgPolicy, OrgPolicyType, OrganizationId, RepromptType, Send, UserId,
+            OrgPolicy, OrgPolicyType, OrganizationId, RepromptType, Send, Tag, TagCipher, TagId, UserId,
         },
         DbConn, DbPool,
     },
@@ -150,6 +150,9 @@ async fn sync(data: SyncData, headers: Headers, client_version: Option<ClientVer
     let folders_json: Vec<Value> =
         Folder::find_by_user(&headers.user.uuid, &conn).await.iter().map(Folder::to_json).collect();
 
+    let tags_json: Vec<Value> =
+        Tag::find_by_user(&headers.user.uuid, &conn).await.iter().map(Tag::to_json).collect();
+
     let sends_json: Vec<Value> =
         Send::find_by_user(&headers.user.uuid, &conn).await.iter().map(Send::to_json).collect();
 
@@ -186,6 +189,7 @@ async fn sync(data: SyncData, headers: Headers, client_version: Option<ClientVer
     Ok(Json(json!({
         "profile": user_json,
         "folders": folders_json,
+        "tags": tags_json,
         "collections": collections_json,
         "policies": policies_json,
         "ciphers": ciphers_json,
@@ -1930,6 +1934,7 @@ pub struct CipherSyncData {
     pub cipher_folders: HashMap<CipherId, FolderId>,
     pub cipher_favorites: HashSet<CipherId>,
     pub cipher_collections: HashMap<CipherId, Vec<CollectionId>>,
+    pub cipher_tags: HashMap<CipherId, Vec<TagId>>,
     pub members: HashMap<OrganizationId, Membership>,
     pub user_collections: HashMap<CollectionId, CollectionUser>,
     pub user_collections_groups: HashMap<CollectionId, CollectionGroup>,
@@ -1979,6 +1984,13 @@ impl CipherSyncData {
             cipher_collections.entry(cipher).or_default().push(collection);
         }
 
+        // Generate a HashMap with the Cipher UUID as key and one or more Tag UUID's
+        let user_cipher_tags = TagCipher::find_by_user(user_id, conn).await;
+        let mut cipher_tags: HashMap<CipherId, Vec<TagId>> = HashMap::with_capacity(user_cipher_tags.len());
+        for (cipher, tag) in user_cipher_tags {
+            cipher_tags.entry(cipher).or_default().push(tag);
+        }
+
         // Generate a HashMap with the Organization UUID as key and the Membership record
         let members: HashMap<OrganizationId, Membership> =
             Membership::find_by_user(user_id, conn).await.into_iter().map(|m| (m.org_uuid.clone(), m)).collect();
@@ -2023,6 +2035,7 @@ impl CipherSyncData {
             cipher_folders,
             cipher_favorites,
             cipher_collections,
+            cipher_tags,
             members,
             user_collections,
             user_collections_groups,
