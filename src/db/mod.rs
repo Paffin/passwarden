@@ -454,7 +454,7 @@ fn backup_mysql(db_url: &str) -> Result<String, Error> {
         .arg(database);
 
     if !password.is_empty() {
-        cmd.arg(format!("--password={password}"));
+        cmd.env("MYSQL_PWD", password);
     }
 
     let output = cmd.output().map_err(|e| {
