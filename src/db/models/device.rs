@@ -31,6 +31,9 @@ pub struct Device {
 
     pub refresh_token: String,
     pub twofactor_remember: Option<String>,
+
+    pub verified: bool,
+    pub verification_token: Option<String>,
 }
 
 /// Local methods
@@ -51,7 +54,22 @@ impl Device {
             push_token: None,
             refresh_token: crypto::encode_random_bytes::<64>(&BASE64URL),
             twofactor_remember: None,
+
+            verified: true,
+            verification_token: None,
         }
+    }
+
+    pub fn generate_verification_token(&mut self) -> String {
+        let token = crypto::encode_random_bytes::<32>(&BASE64URL);
+        self.verification_token = Some(token.clone());
+        self.verified = false;
+        token
+    }
+
+    pub fn verify_device(&mut self) {
+        self.verified = true;
+        self.verification_token = None;
     }
 
     pub fn to_json(&self) -> Value {
@@ -217,6 +235,15 @@ impl Device {
                 .map_res("Error removing push token")
         }}
     }
+    pub async fn find_by_verification_token(token: &str, conn: &DbConn) -> Option<Self> {
+        db_run! { conn: {
+            devices::table
+                .filter(devices::verification_token.eq(token))
+                .first::<Self>(conn)
+                .ok()
+        }}
+    }
+
     pub async fn find_by_refresh_token(refresh_token: &str, conn: &DbConn) -> Option<Self> {
         db_run! { conn: {
             devices::table

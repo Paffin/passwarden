@@ -1,0 +1,2 @@
+ALTER TABLE devices ADD COLUMN verified BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE devices ADD COLUMN verification_token TEXT;

@@ -21,12 +21,13 @@ Passwarden extends Vaultwarden with features that the upstream project hasn't im
 
 - **Organization Sends** — Send items can now belong to organizations, with proper revision tracking for all org members
 - **MySQL/PostgreSQL Backup** — Database backup from admin panel now supports all database backends (via `mysqldump`/`pg_dump`)
+- **New Device Login Protection** — When enabled (`NEW_DEVICE_VERIFICATION=true`), new devices must be verified via email link before login is allowed
 
 ### Roadmap
 
 | Priority | Feature | Status |
 |----------|---------|--------|
-| P0 | New Device Login Protection | Planned |
+| ~~P0~~ | ~~New Device Login Protection~~ | Done |
 | P0 | Passwordless Login via Passkeys | Planned |
 | P1 | Custom User Roles (replacing HACK workarounds) | Planned |
 | P1 | SCIM 2.0 Provisioning | Planned |

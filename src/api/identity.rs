@@ -45,7 +45,8 @@ pub fn routes() -> Vec<Route> {
         prevalidate,
         authorize,
         oidcsignin,
-        oidcsignin_error
+        oidcsignin_error,
+        verify_device
     ]
 }
 
@@ -438,6 +439,32 @@ async fn authenticated_response(
     ip: &ClientIp,
 ) -> JsonResult {
     if CONFIG.mail_enabled() && device.is_new() {
+        // New device verification: block login until device is verified via email link
+        if CONFIG.new_device_verification() && !device.verified {
+            let now = Utc::now().naive_utc();
+
+            // Generate a new verification token (replaces any expired token)
+            let token = device.generate_verification_token();
+            device.save(false, conn).await?;
+
+            if let Err(e) = mail::send_device_verification(&user.email, &token, &ip.ip.to_string(), &now, device).await {
+                error!("Error sending device verification email: {e:#?}");
+                err!(
+                    "Could not send device verification email. Please contact your administrator.",
+                    ErrorEvent {
+                        event: EventType::UserFailedLogIn
+                    }
+                )
+            }
+
+            err!(
+                "New device verification required. Please check your email and click the verification link, then try logging in again.",
+                ErrorEvent {
+                    event: EventType::UserFailedLogIn
+                }
+            )
+        }
+
         let now = Utc::now().naive_utc();
         if let Err(e) = mail::send_new_device_logged_in(&user.email, &ip.ip.to_string(), &now, device).await {
             error!("Error sending new device email: {e:#?}");
@@ -699,6 +726,10 @@ async fn get_device(data: &ConnectData, conn: &DbConn, user: &User) -> ApiResult
         Some(device) => Ok(device),
         None => {
             let mut device = Device::new(device_id, user.uuid.clone(), device_name, device_type);
+            // Mark new device as unverified when new device verification is enabled
+            if CONFIG.new_device_verification() && CONFIG.mail_enabled() {
+                device.verified = false;
+            }
             // save device without updating `device.updated_at`
             device.save(false, conn).await?;
             Ok(device)
@@ -1058,6 +1089,23 @@ struct ConnectData {
     #[field(name = uncased("code_verifier"))]
     code_verifier: Option<OIDCCodeVerifier>,
 }
+#[get("/device/verify/<token>")]
+async fn verify_device(token: &str, conn: DbConn) -> ApiResult<rocket::response::content::RawHtml<String>> {
+    let Some(mut device) = Device::find_by_verification_token(token, &conn).await else {
+        err!("Invalid or expired verification token. Please try logging in again to receive a new link.")
+    };
+
+    device.verify_device();
+    device.save(false, &conn).await?;
+
+    Ok(rocket::response::content::RawHtml(
+        "<html><body style=\"font-family: sans-serif; text-align: center; padding: 50px;\">
+        <h2>Device Verified</h2>
+        <p>Your device has been successfully verified. You can now log in.</p>
+        </body></html>".to_string()
+    ))
+}
+
 fn _check_is_some<T>(value: &Option<T>, msg: &str) -> EmptyResult {
     if value.is_none() {
         err!(msg)

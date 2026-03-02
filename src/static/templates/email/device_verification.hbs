@@ -1,0 +1,15 @@
+Verify Your New Device
+<!---------------->
+A login attempt was made from a new device. To verify this device and allow login, click the link below:
+
+{{url}}/api/device/verify/{{token}}
+
+* Device Name: {{device_name}}
+* Device Type: {{device_type}}
+* IP Address: {{ip}}
+* Date: {{datetime}}
+
+If you did not attempt to log in, you can safely ignore this email. Your account is still secure.
+
+This link will expire in 15 minutes.
+{{> email/email_footer_text }}

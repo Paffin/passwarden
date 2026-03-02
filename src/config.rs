@@ -717,6 +717,10 @@ make_config! {
         /// If sending the email fails the login attempt will fail.
         require_device_email:   bool,   true,   def,     false;
 
+        /// Require new device verification |> When enabled, new devices must be verified via
+        /// an email link before login is allowed. Requires SMTP to be configured.
+        new_device_verification: bool,  true,   def,     false;
+
         /// Reload templates (Dev) |> When this is set to true, the templates get reloaded with every request.
         /// ONLY use this during development, as it can slow down the server
         reload_templates:       bool,   true,   def,    false;

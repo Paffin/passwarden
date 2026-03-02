@@ -55,6 +55,8 @@ table! {
         push_token -> Nullable<Text>,
         refresh_token -> Text,
         twofactor_remember -> Nullable<Text>,
+        verified -> Bool,
+        verification_token -> Nullable<Text>,
     }
 }
 
