@@ -3,7 +3,7 @@ use serde_json::Value;
 
 use crate::{config::PathType, util::LowerCase, CONFIG};
 
-use super::{OrganizationId, User, UserId};
+use super::{Membership, OrganizationId, User, UserId};
 use crate::db::schema::sends;
 use diesel::prelude::*;
 use id::SendId;
@@ -251,7 +251,13 @@ impl Send {
                 user_uuids.push(user_uuid.clone())
             }
             None => {
-                // Belongs to Organization, not implemented
+                // Belongs to Organization, update all org members
+                if let Some(ref org_uuid) = self.organization_uuid {
+                    for member in Membership::find_by_org(org_uuid, conn).await {
+                        User::update_uuid_revision(&member.user_uuid, conn).await;
+                        user_uuids.push(member.user_uuid.clone())
+                    }
+                }
             }
         };
         user_uuids
