@@ -627,6 +627,10 @@ make_config! {
         signups_domains_whitelist: String, true, def,   String::new();
         /// Enable event logging |> Enables event logging for organizations.
         org_events_enabled:     bool,   false,  def,    false;
+        /// Enable webhook delivery |> When enabled, events are POSTed to the configured webhook URL as JSON.
+        webhook_enabled:        bool,   true,   def,    false;
+        /// Webhook URL |> The URL to POST event payloads to. Required when WEBHOOK_ENABLED=true.
+        webhook_url:            String, true,   def,    String::new();
         /// Org creation users |> Allow org creation only by this list of comma-separated user emails.
         /// Blank or 'all' means all users can create orgs; 'none' means no users can create orgs.
         org_creation_users:     String, true,   def,    String::new();

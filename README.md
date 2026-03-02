@@ -23,6 +23,7 @@ Passwarden extends Vaultwarden with features that the upstream project hasn't im
 - **MySQL/PostgreSQL Backup** — Database backup from admin panel now supports all database backends (via `mysqldump`/`pg_dump`)
 - **New Device Login Protection** — When enabled (`NEW_DEVICE_VERIFICATION=true`), new devices must be verified via email link before login is allowed
 - **Tags for Vault Items** — Organize ciphers with user-scoped tags via REST API (`/api/tags`, `/api/ciphers/<id>/tags`), included in sync responses
+- **Webhook/Event Delivery** — When enabled (`WEBHOOK_ENABLED=true`, `WEBHOOK_URL=...`), events are POSTed as JSON to your webhook endpoint in real-time
 
 ### Roadmap
 
@@ -34,7 +35,7 @@ Passwarden extends Vaultwarden with features that the upstream project hasn't im
 | P1 | SCIM 2.0 Provisioning | Planned |
 | ~~P1~~ | ~~Tags system for vault items~~ | Done |
 | ~~P1~~ | ~~MySQL/PostgreSQL backup support~~ | Done |
-| P2 | Webhook/Event Delivery API | Planned |
+| ~~P2~~ | ~~Webhook/Event Delivery API~~ | Done |
 | P2 | P2P Password Sharing | Planned |
 | P2 | Mobile-Responsive Admin UI | Planned |
 
