@@ -11,6 +11,6 @@ data
 
 # Environment file
 .env
-
+.omc
 # Web vault
 web-vault

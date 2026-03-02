@@ -1,34 +1,43 @@
-![Vaultwarden Logo](./resources/vaultwarden-logo-auto.svg)
+# Passwarden
 
-An alternative server implementation of the Bitwarden Client API, written in Rust and compatible with [official Bitwarden clients](https://bitwarden.com/download/) [[disclaimer](#disclaimer)], perfect for self-hosted deployment where running the official resource-heavy service might not be ideal.
+**A Vaultwarden fork with extended features for self-hosted password management.**
+
+Based on [Vaultwarden](https://github.com/dani-garcia/vaultwarden) — an alternative server implementation of the Bitwarden Client API, written in Rust and compatible with [official Bitwarden clients](https://bitwarden.com/download/).
 
 ---
 
-[![GitHub Release](https://img.shields.io/github/release/dani-garcia/vaultwarden.svg?style=for-the-badge&logo=vaultwarden&color=005AA4)](https://github.com/dani-garcia/vaultwarden/releases/latest)
-[![ghcr.io Pulls](https://img.shields.io/badge/dynamic/json?style=for-the-badge&logo=github&logoColor=fff&color=005AA4&url=https%3A%2F%2Fipitio.github.io%2Fbackage%2Fdani-garcia%2Fvaultwarden%2Fvaultwarden.json&query=%24.downloads&label=ghcr.io%20pulls&cacheSeconds=14400)](https://github.com/dani-garcia/vaultwarden/pkgs/container/vaultwarden)
-[![Docker Pulls](https://img.shields.io/docker/pulls/vaultwarden/server.svg?style=for-the-badge&logo=docker&logoColor=fff&color=005AA4&label=docker.io%20pulls)](https://hub.docker.com/r/vaultwarden/server)
-[![Quay.io](https://img.shields.io/badge/quay.io-download-005AA4?style=for-the-badge&logo=redhat&cacheSeconds=14400)](https://quay.io/repository/vaultwarden/server) <br>
-[![Contributors](https://img.shields.io/github/contributors-anon/dani-garcia/vaultwarden.svg?style=flat-square&logo=vaultwarden&color=005AA4)](https://github.com/dani-garcia/vaultwarden/graphs/contributors)
-[![Forks](https://img.shields.io/github/forks/dani-garcia/vaultwarden.svg?style=flat-square&logo=github&logoColor=fff&color=005AA4)](https://github.com/dani-garcia/vaultwarden/network/members)
-[![Stars](https://img.shields.io/github/stars/dani-garcia/vaultwarden.svg?style=flat-square&logo=github&logoColor=fff&color=005AA4)](https://github.com/dani-garcia/vaultwarden/stargazers)
-[![Issues Open](https://img.shields.io/github/issues/dani-garcia/vaultwarden.svg?style=flat-square&logo=github&logoColor=fff&color=005AA4&cacheSeconds=300)](https://github.com/dani-garcia/vaultwarden/issues)
-[![Issues Closed](https://img.shields.io/github/issues-closed/dani-garcia/vaultwarden.svg?style=flat-square&logo=github&logoColor=fff&color=005AA4&cacheSeconds=300)](https://github.com/dani-garcia/vaultwarden/issues?q=is%3Aissue+is%3Aclosed)
-[![AGPL-3.0 Licensed](https://img.shields.io/github/license/dani-garcia/vaultwarden.svg?style=flat-square&logo=vaultwarden&color=944000&cacheSeconds=14400)](https://github.com/dani-garcia/vaultwarden/blob/main/LICENSE.txt) <br>
-[![Dependency Status](https://img.shields.io/badge/dynamic/xml?url=https%3A%2F%2Fdeps.rs%2Frepo%2Fgithub%2Fdani-garcia%2Fvaultwarden%2Fstatus.svg&query=%2F*%5Blocal-name()%3D'svg'%5D%2F*%5Blocal-name()%3D'g'%5D%5B2%5D%2F*%5Blocal-name()%3D'text'%5D%5B4%5D&style=flat-square&logo=rust&label=dependencies&color=005AA4)](https://deps.rs/repo/github/dani-garcia/vaultwarden)
-[![GHA Release](https://img.shields.io/github/actions/workflow/status/dani-garcia/vaultwarden/release.yml?style=flat-square&logo=github&logoColor=fff&label=Release%20Workflow)](https://github.com/dani-garcia/vaultwarden/actions/workflows/release.yml)
-[![GHA Build](https://img.shields.io/github/actions/workflow/status/dani-garcia/vaultwarden/build.yml?style=flat-square&logo=github&logoColor=fff&label=Build%20Workflow)](https://github.com/dani-garcia/vaultwarden/actions/workflows/build.yml) <br>
-[![Matrix Chat](https://img.shields.io/matrix/vaultwarden:matrix.org.svg?style=flat-square&logo=matrix&logoColor=fff&color=953B00&cacheSeconds=14400)](https://matrix.to/#/#vaultwarden:matrix.org)
-[![GitHub Discussions](https://img.shields.io/github/discussions/dani-garcia/vaultwarden?style=flat-square&logo=github&logoColor=fff&color=953B00&cacheSeconds=300)](https://github.com/dani-garcia/vaultwarden/discussions)
-[![Discourse Discussions](https://img.shields.io/discourse/topics?server=https%3A%2F%2Fvaultwarden.discourse.group%2F&style=flat-square&logo=discourse&color=953B00)](https://vaultwarden.discourse.group/)
+[![GitHub Release](https://img.shields.io/github/release/Paffin/passwarden.svg?style=for-the-badge&color=005AA4)](https://github.com/Paffin/passwarden/releases/latest)
+[![AGPL-3.0 Licensed](https://img.shields.io/github/license/Paffin/passwarden.svg?style=for-the-badge&color=944000)](https://github.com/Paffin/passwarden/blob/main/LICENSE.txt)
+[![Issues](https://img.shields.io/github/issues/Paffin/passwarden.svg?style=for-the-badge&color=005AA4)](https://github.com/Paffin/passwarden/issues)
 
-> [!IMPORTANT]
-> **When using this server, please report any bugs or suggestions directly to us (see [Get in touch](#get-in-touch)), regardless of whatever clients you are using (mobile, desktop, browser...). DO NOT use the official Bitwarden support channels.**
+> [!NOTE]
+> Passwarden is an independent fork of Vaultwarden. Please report bugs and suggestions to [our issue tracker](https://github.com/Paffin/passwarden/issues), not to the upstream Vaultwarden or official Bitwarden channels.
 
-<br>
+## What's different from Vaultwarden?
 
-## Features
+Passwarden extends Vaultwarden with features that the upstream project hasn't implemented yet:
 
-A nearly complete implementation of the Bitwarden Client API is provided, including:
+### Implemented
+
+- **Organization Sends** — Send items can now belong to organizations, with proper revision tracking for all org members
+
+### Roadmap
+
+| Priority | Feature | Status |
+|----------|---------|--------|
+| P0 | New Device Login Protection | Planned |
+| P0 | Passwordless Login via Passkeys | Planned |
+| P1 | Custom User Roles (replacing HACK workarounds) | Planned |
+| P1 | SCIM 2.0 Provisioning | Planned |
+| P1 | Tags system for vault items | Planned |
+| P1 | MySQL/PostgreSQL backup support | Planned |
+| P2 | Webhook/Event Delivery API | Planned |
+| P2 | P2P Password Sharing | Planned |
+| P2 | Mobile-Responsive Admin UI | Planned |
+
+## Upstream Features
+
+All features from Vaultwarden are included:
 
  * [Personal Vault](https://bitwarden.com/help/managing-items/)
  * [Send](https://bitwarden.com/help/about-send/)
@@ -51,96 +60,66 @@ A nearly complete implementation of the Bitwarden Client API is provided, includ
      [YubiKey](https://bitwarden.com/help/setup-two-step-login-yubikey/),
      [Duo](https://bitwarden.com/help/setup-two-step-login-duo/)
  * [Emergency Access](https://bitwarden.com/help/emergency-access/)
- * [Vaultwarden Admin Backend](https://github.com/dani-garcia/vaultwarden/wiki/Enabling-admin-page)
- * [Modified Web Vault client](https://github.com/dani-garcia/bw_web_builds) (Bundled within our containers)
-
-<br>
+ * [Admin Backend](https://github.com/dani-garcia/vaultwarden/wiki/Enabling-admin-page)
 
 ## Usage
 
 > [!IMPORTANT]
-> The web-vault requires the use a secure context for the [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API).
-> That means it will only work via `http://localhost:8000` (using the port from the example below) or if you [enable HTTPS](https://github.com/dani-garcia/vaultwarden/wiki/Enabling-HTTPS).
-
-The recommended way to install and use Vaultwarden is via our container images which are published to [ghcr.io](https://github.com/dani-garcia/vaultwarden/pkgs/container/vaultwarden), [docker.io](https://hub.docker.com/r/vaultwarden/server) and [quay.io](https://quay.io/repository/vaultwarden/server).
-See [which container image to use](https://github.com/dani-garcia/vaultwarden/wiki/Which-container-image-to-use) for an explanation of the provided tags.
-
-There are also [community driven packages](https://github.com/dani-garcia/vaultwarden/wiki/Third-party-packages) which can be used, but those might be lagging behind the latest version or might deviate in the way Vaultwarden is configured, as described in our [Wiki](https://github.com/dani-garcia/vaultwarden/wiki).
-
-Alternatively, you can also [build Vaultwarden](https://github.com/dani-garcia/vaultwarden/wiki/Building-binary) yourself.
-
-While Vaultwarden is based upon the [Rocket web framework](https://rocket.rs) which has built-in support for TLS our recommendation would be that you setup a reverse proxy (see [proxy examples](https://github.com/dani-garcia/vaultwarden/wiki/Proxy-examples)).
-
-> [!TIP]
->**For more detailed examples on how to install, use and configure Vaultwarden you can check our [Wiki](https://github.com/dani-garcia/vaultwarden/wiki).**
-
-### Docker/Podman CLI
-
-Pull the container image and mount a volume from the host for persistent storage.<br>
-You can replace `docker` with `podman` if you prefer to use podman.
-
-```shell
-docker pull vaultwarden/server:latest
-docker run --detach --name vaultwarden \
-  --env DOMAIN="https://vw.domain.tld" \
-  --volume /vw-data/:/data/ \
-  --restart unless-stopped \
-  --publish 127.0.0.1:8000:80 \
-  vaultwarden/server:latest
-```
-
-This will preserve any persistent data under `/vw-data/`, you can adapt the path to whatever suits you.
+> The web-vault requires a secure context for the [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API).
+> It will only work via `http://localhost:8000` or with [HTTPS enabled](https://github.com/dani-garcia/vaultwarden/wiki/Enabling-HTTPS).
 
 ### Docker Compose
 
-To use Docker compose you need to create a `compose.yaml` which will hold the configuration to run the Vaultwarden container.
-
 ```yaml
 services:
-  vaultwarden:
-    image: vaultwarden/server:latest
-    container_name: vaultwarden
+  passwarden:
+    image: vaultwarden/server:latest  # or build from this repo
+    container_name: passwarden
     restart: unless-stopped
     environment:
-      DOMAIN: "https://vw.domain.tld"
+      DOMAIN: "https://pw.domain.tld"
     volumes:
-      - ./vw-data/:/data/
+      - ./pw-data/:/data/
     ports:
       - 127.0.0.1:8000:80
 ```
 
-<br>
+### Building from source
 
-## Get in touch
+```shell
+# Clone the repository
+git clone https://github.com/Paffin/passwarden.git
+cd passwarden
 
-Have a question, suggestion or need help? Join our community on [Matrix](https://matrix.to/#/#vaultwarden:matrix.org), [GitHub Discussions](https://github.com/dani-garcia/vaultwarden/discussions) or [Discourse Forums](https://vaultwarden.discourse.group/).
+# Build with SQLite support
+cargo build --features sqlite --release
 
-Encountered a bug or crash? Please search our issue tracker and discussions to see if it's already been reported. If not, please [start a new discussion](https://github.com/dani-garcia/vaultwarden/discussions) or [create a new issue](https://github.com/dani-garcia/vaultwarden/issues/). Ensure you're using the latest version of Vaultwarden and there aren't any similar issues open or closed!
+# Build with MySQL support
+cargo build --features mysql --release
 
-<br>
+# Build with PostgreSQL support
+cargo build --features postgresql --release
+```
 
-## Contributors
+For more detailed build instructions, see the [Vaultwarden Wiki](https://github.com/dani-garcia/vaultwarden/wiki/Building-binary).
 
-Thanks for your contribution to the project!
+## Syncing with upstream
 
-[![Contributors Count](https://img.shields.io/github/contributors-anon/dani-garcia/vaultwarden?style=for-the-badge&logo=vaultwarden&color=005AA4)](https://github.com/dani-garcia/vaultwarden/graphs/contributors)<br>
-[![Contributors Avatars](https://contributors-img.web.app/image?repo=dani-garcia/vaultwarden)](https://github.com/dani-garcia/vaultwarden/graphs/contributors)
+Passwarden regularly syncs with the latest Vaultwarden releases to incorporate upstream fixes and improvements.
 
-<br>
+```shell
+git remote add upstream https://github.com/dani-garcia/vaultwarden.git
+git fetch upstream
+git merge upstream/main
+```
 
-## Disclaimer
+## License
+
+This project is licensed under the [GNU Affero General Public License v3.0](LICENSE.txt), same as the upstream Vaultwarden project.
+
+## Acknowledgments
+
+- [Vaultwarden](https://github.com/dani-garcia/vaultwarden) by Daniel Garcia and contributors
+- [Bitwarden](https://bitwarden.com/) for the client applications and API specification
 
 **This project is not associated with [Bitwarden](https://bitwarden.com/) or Bitwarden, Inc.**
-
-However, one of the active maintainers for Vaultwarden is employed by Bitwarden and is allowed to contribute to the project on their own time. These contributions are independent of Bitwarden and are reviewed by other maintainers.
-
-The maintainers work together to set the direction for the project, focusing on serving the self-hosting community, including individuals, families, and small organizations, while ensuring the project's sustainability.
-
-**Please note:** We cannot be held liable for any data loss that may occur while using Vaultwarden. This includes passwords, attachments, and other information handled by the application. We highly recommend performing regular backups of your files and database. However, should you experience data loss, we encourage you to contact us immediately.
-
-<br>
-
-## Bitwarden_RS
-
-This project was known as Bitwarden_RS and has been renamed to separate itself from the official Bitwarden server in the hopes of avoiding confusion and trademark/branding issues.<br>
-Please see [#1642 - v1.21.0 release and project rename to Vaultwarden](https://github.com/dani-garcia/vaultwarden/discussions/1642) for more explanation.
