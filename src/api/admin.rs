@@ -20,7 +20,7 @@ use crate::{
     auth::{decode_admin, encode_jwt, generate_admin_claims, ClientIp, Secure},
     config::ConfigBuilder,
     db::{
-        backup_sqlite, get_sql_server_version,
+        backup_database, get_sql_server_version,
         models::{
             Attachment, Cipher, Collection, Device, Event, EventType, Group, Invitation, Membership, MembershipId,
             MembershipType, OrgPolicy, Organization, OrganizationId, SsoUser, TwoFactor, User, UserId,
@@ -91,11 +91,7 @@ static DB_TYPE: LazyLock<&str> = LazyLock::new(|| match ACTIVE_DB_TYPE.get() {
     _ => "Unknown",
 });
 
-#[cfg(sqlite)]
-static CAN_BACKUP: LazyLock<bool> =
-    LazyLock::new(|| ACTIVE_DB_TYPE.get().map(|t| *t == DbConnType::Sqlite).unwrap_or(false));
-#[cfg(not(sqlite))]
-static CAN_BACKUP: LazyLock<bool> = LazyLock::new(|| false);
+static CAN_BACKUP: LazyLock<bool> = LazyLock::new(|| ACTIVE_DB_TYPE.get().is_some());
 
 #[get("/")]
 fn admin_disabled() -> &'static str {
@@ -799,12 +795,12 @@ async fn delete_config(_token: AdminToken) -> EmptyResult {
 #[post("/config/backup_db", format = "application/json")]
 fn backup_db(_token: AdminToken) -> ApiResult<String> {
     if *CAN_BACKUP {
-        match backup_sqlite() {
+        match backup_database() {
             Ok(f) => Ok(format!("Backup to '{f}' was successful")),
-            Err(e) => err!(format!("Backup was unsuccessful {e}")),
+            Err(e) => err!(format!("Backup was unsuccessful: {e}")),
         }
     } else {
-        err!("Can't back up current DB (Only SQLite supports this feature)");
+        err!("Can't back up current DB (no active database type detected)");
     }
 }
 

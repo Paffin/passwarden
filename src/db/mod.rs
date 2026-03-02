@@ -382,43 +382,134 @@ pub mod schema;
 // Reexport the models, needs to be after the macros are defined so it can access them
 pub mod models;
 
-/// Creates a back-up of the sqlite database
-/// MySQL/MariaDB and PostgreSQL are not supported.
-#[cfg(sqlite)]
-pub fn backup_sqlite() -> Result<String, Error> {
-    use diesel::Connection;
-    use std::{fs::File, io::Write};
-
+/// Creates a back-up of the database.
+/// Supports SQLite (native), MySQL/MariaDB (via mysqldump), and PostgreSQL (via pg_dump).
+pub fn backup_database() -> Result<String, Error> {
     let db_url = CONFIG.database_url();
-    if DbConnType::from_url(&CONFIG.database_url()).map(|t| t == DbConnType::Sqlite).unwrap_or(false) {
-        // Since we do not allow any schema for sqlite database_url's like `file:` or `sqlite:` to be set, we can assume here it isn't
-        // This way we can set a readonly flag on the opening mode without issues.
-        let mut conn = diesel::sqlite::SqliteConnection::establish(&format!("sqlite://{db_url}?mode=ro"))?;
-
-        let db_path = std::path::Path::new(&db_url).parent().unwrap();
-        let backup_file = db_path
-            .join(format!("db_{}.sqlite3", chrono::Utc::now().format("%Y%m%d_%H%M%S")))
-            .to_string_lossy()
-            .into_owned();
-
-        match File::create(backup_file.clone()) {
-            Ok(mut f) => {
-                let serialized_db = conn.serialize_database_to_buffer();
-                f.write_all(serialized_db.as_slice()).expect("Error writing SQLite backup");
-                Ok(backup_file)
-            }
-            Err(e) => {
-                err_silent!(format!("Unable to save SQLite backup: {e:?}"))
-            }
-        }
-    } else {
-        err_silent!("The database type is not SQLite. Backups only works for SQLite databases")
+    match DbConnType::from_url(&db_url) {
+        #[cfg(sqlite)]
+        Ok(DbConnType::Sqlite) => backup_sqlite(&db_url),
+        #[cfg(mysql)]
+        Ok(DbConnType::Mysql) => backup_mysql(&db_url),
+        #[cfg(postgresql)]
+        Ok(DbConnType::Postgresql) => backup_postgresql(&db_url),
+        Err(e) => err_silent!(format!("Unable to determine database type: {e}")),
+        #[allow(unreachable_patterns)]
+        _ => err_silent!("Database backup is not available for the current database type"),
     }
 }
 
-#[cfg(not(sqlite))]
-pub fn backup_sqlite() -> Result<String, Error> {
-    err_silent!("The database type is not SQLite. Backups only works for SQLite databases")
+#[cfg(sqlite)]
+fn backup_sqlite(db_url: &str) -> Result<String, Error> {
+    use diesel::Connection;
+    use std::{fs::File, io::Write};
+
+    let mut conn = diesel::sqlite::SqliteConnection::establish(&format!("sqlite://{db_url}?mode=ro"))?;
+
+    let db_path = std::path::Path::new(db_url).parent().unwrap();
+    let backup_file = db_path
+        .join(format!("db_{}.sqlite3", chrono::Utc::now().format("%Y%m%d_%H%M%S")))
+        .to_string_lossy()
+        .into_owned();
+
+    match File::create(backup_file.clone()) {
+        Ok(mut f) => {
+            let serialized_db = conn.serialize_database_to_buffer();
+            f.write_all(serialized_db.as_slice()).expect("Error writing SQLite backup");
+            Ok(backup_file)
+        }
+        Err(e) => {
+            err_silent!(format!("Unable to save SQLite backup: {e:?}"))
+        }
+    }
+}
+
+#[cfg(mysql)]
+fn backup_mysql(db_url: &str) -> Result<String, Error> {
+    use std::process::Command;
+
+    let parsed = url::Url::parse(db_url).map_err(|e| Error::new_msg(format!("Invalid MySQL URL: {e}")))?;
+
+    let host = parsed.host_str().unwrap_or("localhost");
+    let port = parsed.port().unwrap_or(3306);
+    let username = parsed.username();
+    let password = parsed.password().unwrap_or("");
+    let database = parsed.path().trim_start_matches('/');
+
+    if database.is_empty() {
+        err_silent!("No database name specified in DATABASE_URL");
+    }
+
+    let backup_dir = CONFIG.data_folder();
+    let backup_file = format!("{}/db_{}.sql", backup_dir, chrono::Utc::now().format("%Y%m%d_%H%M%S"));
+
+    let mut cmd = Command::new("mysqldump");
+    cmd.args(["--host", host])
+        .args(["--port", &port.to_string()])
+        .args(["--user", username])
+        .args(["--result-file", &backup_file])
+        .arg("--single-transaction")
+        .arg("--routines")
+        .arg("--triggers")
+        .arg(database);
+
+    if !password.is_empty() {
+        cmd.arg(format!("--password={password}"));
+    }
+
+    let output = cmd.output().map_err(|e| {
+        Error::new_msg(format!("Failed to execute mysqldump (is it installed and in PATH?): {e}"))
+    })?;
+
+    if output.status.success() {
+        Ok(backup_file)
+    } else {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        err_silent!(format!("mysqldump failed: {stderr}"))
+    }
+}
+
+#[cfg(postgresql)]
+fn backup_postgresql(db_url: &str) -> Result<String, Error> {
+    use std::process::Command;
+
+    let parsed = url::Url::parse(db_url).map_err(|e| Error::new_msg(format!("Invalid PostgreSQL URL: {e}")))?;
+
+    let host = parsed.host_str().unwrap_or("localhost");
+    let port = parsed.port().unwrap_or(5432);
+    let username = parsed.username();
+    let password = parsed.password().unwrap_or("");
+    let database = parsed.path().trim_start_matches('/');
+
+    if database.is_empty() {
+        err_silent!("No database name specified in DATABASE_URL");
+    }
+
+    let backup_dir = CONFIG.data_folder();
+    let backup_file = format!("{}/db_{}.sql", backup_dir, chrono::Utc::now().format("%Y%m%d_%H%M%S"));
+
+    let mut cmd = Command::new("pg_dump");
+    cmd.args(["--host", host])
+        .args(["--port", &port.to_string()])
+        .args(["--username", username])
+        .args(["--file", &backup_file])
+        .arg("--no-password")
+        .arg(database);
+
+    if !password.is_empty() {
+        cmd.env("PGPASSWORD", password);
+    }
+
+    let output = cmd.output().map_err(|e| {
+        Error::new_msg(format!("Failed to execute pg_dump (is it installed and in PATH?): {e}"))
+    })?;
+
+    if output.status.success() {
+        Ok(backup_file)
+    } else {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        err_silent!(format!("pg_dump failed: {stderr}"))
+    }
 }
 
 /// Get the SQL Server version

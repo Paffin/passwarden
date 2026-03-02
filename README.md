@@ -20,6 +20,7 @@ Passwarden extends Vaultwarden with features that the upstream project hasn't im
 ### Implemented
 
 - **Organization Sends** — Send items can now belong to organizations, with proper revision tracking for all org members
+- **MySQL/PostgreSQL Backup** — Database backup from admin panel now supports all database backends (via `mysqldump`/`pg_dump`)
 
 ### Roadmap
 
@@ -30,7 +31,7 @@ Passwarden extends Vaultwarden with features that the upstream project hasn't im
 | P1 | Custom User Roles (replacing HACK workarounds) | Planned |
 | P1 | SCIM 2.0 Provisioning | Planned |
 | P1 | Tags system for vault items | Planned |
-| P1 | MySQL/PostgreSQL backup support | Planned |
+| ~~P1~~ | ~~MySQL/PostgreSQL backup support~~ | Done |
 | P2 | Webhook/Event Delivery API | Planned |
 | P2 | P2P Password Sharing | Planned |
 | P2 | Mobile-Responsive Admin UI | Planned |
