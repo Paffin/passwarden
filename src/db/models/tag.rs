@@ -135,7 +135,7 @@ impl Tag {
             tags::table
                 .filter(tags::user_uuid.eq(user_uuid))
                 .load::<Self>(conn)
-                .expect("Error loading tags")
+                .unwrap_or_default()
         }}
     }
 }

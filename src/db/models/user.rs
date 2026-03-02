@@ -5,7 +5,8 @@ use diesel::prelude::*;
 use serde_json::Value;
 
 use super::{
-    Cipher, Device, EmergencyAccess, Favorite, Folder, Membership, MembershipType, TwoFactor, TwoFactorIncomplete,
+    Cipher, Device, EmergencyAccess, Favorite, Folder, Membership, MembershipType, Tag, TwoFactor,
+    TwoFactorIncomplete,
 };
 use crate::{
     api::EmptyResult,
@@ -328,6 +329,7 @@ impl User {
         Cipher::delete_all_by_user(&self.uuid, conn).await?;
         Favorite::delete_all_by_user(&self.uuid, conn).await?;
         Folder::delete_all_by_user(&self.uuid, conn).await?;
+        Tag::delete_all_by_user(&self.uuid, conn).await?;
         Device::delete_all_by_user(&self.uuid, conn).await?;
         TwoFactor::delete_all_by_user(&self.uuid, conn).await?;
         TwoFactorIncomplete::delete_all_by_user(&self.uuid, conn).await?;
