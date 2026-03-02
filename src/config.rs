@@ -628,9 +628,12 @@ make_config! {
         /// Enable event logging |> Enables event logging for organizations.
         org_events_enabled:     bool,   false,  def,    false;
         /// Enable webhook delivery |> When enabled, events are POSTed to the configured webhook URL as JSON.
+        /// Note: Webhooks fire independently of ORG_EVENTS_ENABLED — disabling org events stops DB logging but not webhook delivery.
         webhook_enabled:        bool,   true,   def,    false;
         /// Webhook URL |> The URL to POST event payloads to. Required when WEBHOOK_ENABLED=true.
         webhook_url:            String, true,   def,    String::new();
+        /// Webhook secret |> HMAC-SHA256 secret for signing webhook payloads. Receivers can verify via X-Passwarden-Signature header.
+        webhook_secret:         String, true,   def,    String::new();
         /// Org creation users |> Allow org creation only by this list of comma-separated user emails.
         /// Blank or 'all' means all users can create orgs; 'none' means no users can create orgs.
         org_creation_users:     String, true,   def,    String::new();
