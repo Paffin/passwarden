@@ -15,13 +15,7 @@ use crate::db::{
 };
 
 pub fn routes() -> Vec<Route> {
-    routes![
-        get_credentials,
-        get_attestation_options,
-        register_credential,
-        register_credential_put,
-        delete_credential,
-    ]
+    routes![get_credentials, get_attestation_options, register_credential, register_credential_put, delete_credential,]
 }
 
 #[get("/webauthn")]

@@ -1156,10 +1156,8 @@ async fn get_webauthn_assertion_options(conn: DbConn) -> JsonResult {
     // webauthn-rs 0.5.x doesn't have discoverable authentication API,
     // so we use start_passkey_authentication with all known credentials.
     let all_credentials = WebAuthnCredential::find_all(&conn).await;
-    let passkeys: Vec<Passkey> = all_credentials
-        .iter()
-        .filter_map(|c| serde_json::from_str(&c.credential).ok())
-        .collect();
+    let passkeys: Vec<Passkey> =
+        all_credentials.iter().filter_map(|c| serde_json::from_str(&c.credential).ok()).collect();
 
     if passkeys.is_empty() {
         err!("No passkey credentials registered on this server")
@@ -1173,9 +1171,7 @@ async fn get_webauthn_assertion_options(conn: DbConn) -> JsonResult {
     let now = Utc::now().naive_utc();
     {
         let mut challenges = PASSKEY_LOGIN_CHALLENGES.lock().unwrap();
-        challenges.retain(|_, (_, created_at)| {
-            now.signed_duration_since(*created_at).num_seconds() < 300
-        });
+        challenges.retain(|_, (_, created_at)| now.signed_duration_since(*created_at).num_seconds() < 300);
         challenges.insert(token.clone(), (state, now));
     }
 
@@ -1185,12 +1181,7 @@ async fn get_webauthn_assertion_options(conn: DbConn) -> JsonResult {
     })))
 }
 
-async fn _webauthn_login(
-    data: ConnectData,
-    user_id: &mut Option<UserId>,
-    conn: &DbConn,
-    ip: &ClientIp,
-) -> JsonResult {
+async fn _webauthn_login(data: ConnectData, user_id: &mut Option<UserId>, conn: &DbConn, ip: &ClientIp) -> JsonResult {
     use crate::api::core::two_factor::webauthn::{PublicKeyCredentialCopy, WEBAUTHN};
     use webauthn_rs_proto::PublicKeyCredential;
 
@@ -1230,17 +1221,9 @@ async fn _webauthn_login(
     let rsp: PublicKeyCredential = rsp.into();
 
     // Extract user_handle from the response — this identifies the user
-    let user_handle = rsp
-        .response
-        .user_handle
-        .as_ref()
-        .and_then(|uh| String::from_utf8(uh.to_vec()).ok())
-        .or_else(|| {
-            rsp.response
-                .user_handle
-                .as_ref()
-                .and_then(|uh| uuid::Uuid::from_slice(uh).ok())
-                .map(|u| u.to_string())
+    let user_handle =
+        rsp.response.user_handle.as_ref().and_then(|uh| String::from_utf8(uh.to_vec()).ok()).or_else(|| {
+            rsp.response.user_handle.as_ref().and_then(|uh| uuid::Uuid::from_slice(uh).ok()).map(|u| u.to_string())
         });
 
     let Some(user_uuid_str) = user_handle else {
@@ -1286,13 +1269,8 @@ async fn _webauthn_login(
         )
     }
 
-    // Deserialize stored credentials into Passkeys for verification
-    let passkeys: Vec<Passkey> = credentials
-        .iter()
-        .filter_map(|c| serde_json::from_str(&c.credential).ok())
-        .collect();
-
-    if passkeys.is_empty() {
+    // Verify at least one credential can be deserialized
+    if credentials.iter().filter_map(|c| serde_json::from_str::<Passkey>(&c.credential).ok()).next().is_none() {
         err!(
             "No valid passkey credentials found",
             ErrorEvent {
@@ -1302,18 +1280,17 @@ async fn _webauthn_login(
     }
 
     // Verify the assertion using passkey authentication
-    let authentication_result =
-        match WEBAUTHN.finish_passkey_authentication(&rsp, &state) {
-            Ok(result) => result,
-            Err(e) => {
-                err!(
-                    format!("Passkey authentication failed: {e}"),
-                    ErrorEvent {
-                        event: EventType::UserFailedLogIn
-                    }
-                )
-            }
-        };
+    let authentication_result = match WEBAUTHN.finish_passkey_authentication(&rsp, &state) {
+        Ok(result) => result,
+        Err(e) => {
+            err!(
+                format!("Passkey authentication failed: {e}"),
+                ErrorEvent {
+                    event: EventType::UserFailedLogIn
+                }
+            )
+        }
+    };
 
     // Find the matching credential and update counter if needed
     let mut matched_credential: Option<&WebAuthnCredential> = None;
