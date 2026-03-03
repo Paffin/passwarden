@@ -54,7 +54,7 @@ pub struct TagData {
 async fn post_tags(data: Json<TagData>, headers: Headers, conn: DbConn, nt: Notify<'_>) -> JsonResult {
     let data: TagData = data.into_inner();
 
-    let mut tag = Tag::new(headers.user.uuid, data.name);
+    let mut tag = Tag::new(headers.user.uuid.clone(), data.name);
 
     tag.save(&conn).await?;
     nt.send_user_update(UpdateType::SyncSettings, &headers.user, &headers.device.push_uuid, &conn).await;

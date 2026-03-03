@@ -35,6 +35,8 @@ static ANON_PUSH_DEVICE: LazyLock<Device> = LazyLock::new(|| {
         push_token: None,
         refresh_token: String::new(),
         twofactor_remember: None,
+        verified: true,
+        verification_token: None,
     }
 });
 

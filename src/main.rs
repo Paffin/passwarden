@@ -188,7 +188,7 @@ fn parse_args() {
                 exit(1);
             }
         } else if command == "backup" {
-            match db::backup_sqlite() {
+            match db::backup_database() {
                 Ok(f) => {
                     println!("Backup to '{f}' was successful");
                     exit(0);
@@ -607,7 +607,7 @@ async fn launch_rocket(pool: db::DbPool, extra_debug: bool) -> Result<(), Error>
                     // If we need more signals to act upon, we might want to use select! here.
                     // With only one item to listen for this is enough.
                     let _ = signal_user1.recv().await;
-                    match db::backup_sqlite() {
+                    match db::backup_database() {
                         Ok(f) => info!("Backup to '{f}' was successful"),
                         Err(e) => error!("Backup failed. {e:?}"),
                     }
