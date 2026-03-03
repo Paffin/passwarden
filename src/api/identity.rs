@@ -1270,7 +1270,7 @@ async fn _webauthn_login(data: ConnectData, user_id: &mut Option<UserId>, conn: 
     }
 
     // Verify at least one credential can be deserialized
-    if credentials.iter().filter_map(|c| serde_json::from_str::<Passkey>(&c.credential).ok()).next().is_none() {
+    if credentials.iter().find_map(|c| serde_json::from_str::<Passkey>(&c.credential).ok()).is_none() {
         err!(
             "No valid passkey credentials found",
             ErrorEvent {
