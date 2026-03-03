@@ -69,6 +69,14 @@ impl WebAuthnCredential {
         }
     }
 
+    pub async fn find_all(conn: &DbConn) -> Vec<Self> {
+        db_run! { conn: {
+            web_authn_credentials::table
+                .load::<WebAuthnCredential>(conn)
+                .unwrap_or_default()
+        }}
+    }
+
     pub async fn find_all_by_user(user_uuid: &UserId, conn: &DbConn) -> Vec<Self> {
         db_run! { conn: {
             web_authn_credentials::table

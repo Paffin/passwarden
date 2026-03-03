@@ -3,7 +3,8 @@ use rocket::Route;
 use serde_json::Value;
 use std::str::FromStr;
 use uuid::Uuid;
-use webauthn_rs::prelude::{PasskeyRegistration, UserVerificationPolicy};
+use webauthn_rs::prelude::PasskeyRegistration;
+use webauthn_rs_proto::UserVerificationPolicy;
 
 use super::two_factor::webauthn::{RegisterPublicKeyCredentialCopy, WEBAUTHN};
 use crate::api::{EmptyResult, JsonResult, PasswordOrOtpData};

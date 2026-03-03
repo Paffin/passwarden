@@ -11,7 +11,7 @@ use serde_json::Value;
 
 use std::collections::HashMap;
 use std::sync::{LazyLock, Mutex};
-use webauthn_rs::prelude::{DiscoverableAuthentication, DiscoverableKey, Passkey};
+use webauthn_rs::prelude::{Passkey, PasskeyAuthentication};
 
 use crate::{
     api::{
@@ -42,9 +42,9 @@ use crate::{
 };
 
 /// In-memory storage for passkey login challenge state.
-/// Maps a random token to (DiscoverableAuthentication state, creation timestamp).
+/// Maps a random token to (PasskeyAuthentication state, creation timestamp).
 /// Entries expire after 5 minutes.
-static PASSKEY_LOGIN_CHALLENGES: LazyLock<Mutex<HashMap<String, (DiscoverableAuthentication, chrono::NaiveDateTime)>>> =
+static PASSKEY_LOGIN_CHALLENGES: LazyLock<Mutex<HashMap<String, (PasskeyAuthentication, chrono::NaiveDateTime)>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
 
 pub fn routes() -> Vec<Route> {
@@ -1145,18 +1145,29 @@ fn _check_is_some<T>(value: &Option<T>, msg: &str) -> EmptyResult {
 // --- Passkey Login ---
 
 #[post("/webauthn/assertion-options")]
-async fn get_webauthn_assertion_options() -> JsonResult {
+async fn get_webauthn_assertion_options(conn: DbConn) -> JsonResult {
     use crate::api::core::two_factor::webauthn::WEBAUTHN;
 
     if !CONFIG.domain_set() {
         err!("`DOMAIN` environment variable is not set. Passkey login disabled")
     }
 
-    // Use discoverable authentication — no credentials needed upfront.
-    // The authenticator uses its stored resident key to identify the user.
-    let (response, state) = WEBAUTHN.start_discoverable_authentication()?;
+    // Load ALL passkey credentials from the database.
+    // webauthn-rs 0.5.x doesn't have discoverable authentication API,
+    // so we use start_passkey_authentication with all known credentials.
+    let all_credentials = WebAuthnCredential::find_all(conn).await;
+    let passkeys: Vec<Passkey> = all_credentials
+        .iter()
+        .filter_map(|c| serde_json::from_str(&c.credential).ok())
+        .collect();
 
-    let token = crate::util::get_uuid();
+    if passkeys.is_empty() {
+        err!("No passkey credentials registered on this server")
+    }
+
+    let (response, state) = WEBAUTHN.start_passkey_authentication(&passkeys)?;
+
+    let token = util::get_uuid();
 
     // Clean up expired challenges (older than 5 minutes)
     let now = Utc::now().naive_utc();
@@ -1275,16 +1286,13 @@ async fn _webauthn_login(
         )
     }
 
-    // Deserialize stored credentials into DiscoverableKeys for verification
-    let discoverable_keys: Vec<DiscoverableKey> = credentials
+    // Deserialize stored credentials into Passkeys for verification
+    let passkeys: Vec<Passkey> = credentials
         .iter()
-        .filter_map(|c| {
-            let passkey: Passkey = serde_json::from_str(&c.credential).ok()?;
-            Some(DiscoverableKey::from(passkey))
-        })
+        .filter_map(|c| serde_json::from_str(&c.credential).ok())
         .collect();
 
-    if discoverable_keys.is_empty() {
+    if passkeys.is_empty() {
         err!(
             "No valid passkey credentials found",
             ErrorEvent {
@@ -1293,9 +1301,9 @@ async fn _webauthn_login(
         )
     }
 
-    // Verify the assertion using discoverable authentication
+    // Verify the assertion using passkey authentication
     let authentication_result =
-        match WEBAUTHN.finish_discoverable_authentication(&rsp, state, &discoverable_keys) {
+        match WEBAUTHN.finish_passkey_authentication(&rsp, &state) {
             Ok(result) => result,
             Err(e) => {
                 err!(
