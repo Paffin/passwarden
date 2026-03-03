@@ -266,16 +266,17 @@ async fn _log_user_event(
     Event::save_user_event(events, conn).await.unwrap_or(());
 
     // Fire webhook for user event
+    let user_id_str: &str = user_id;
     let ip_str = ip.to_string();
     crate::webhook::send_webhook(crate::webhook::build_event_payload(
         event_type,
-        Some(String::as_str(user_id)),
+        Some(user_id_str),
         None,
         None,
         None,
         None,
         None,
-        Some(String::as_str(user_id)),
+        Some(user_id_str),
         Some(ip_str.as_str()),
     ));
 }
@@ -342,16 +343,18 @@ async fn _log_event(
     event.save(conn).await.unwrap_or(());
 
     // Fire webhook for this event
+    let org_id_str: &str = org_id;
+    let act_user_id_str: &str = act_user_id;
     let ip_str = ip.to_string();
     crate::webhook::send_webhook(crate::webhook::build_event_payload(
         event_type,
         None,
-        Some(String::as_str(org_id)),
+        Some(org_id_str),
         event.cipher_uuid.as_deref().map(String::as_str),
         event.collection_uuid.as_deref().map(String::as_str),
         event.group_uuid.as_deref().map(String::as_str),
         event.org_user_uuid.as_deref().map(String::as_str),
-        Some(String::as_str(act_user_id)),
+        Some(act_user_id_str),
         Some(ip_str.as_str()),
     ));
 }

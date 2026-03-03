@@ -447,8 +447,7 @@ async fn authenticated_response(
             let token = device.generate_verification_token();
             device.save(false, conn).await?;
 
-            if let Err(e) =
-                mail::send_device_verification(&user.email, &token, &ip.ip.to_string(), &now, device).await
+            if let Err(e) = mail::send_device_verification(&user.email, &token, &ip.ip.to_string(), &now, device).await
             {
                 error!("Error sending device verification email: {e:#?}");
                 err!(
