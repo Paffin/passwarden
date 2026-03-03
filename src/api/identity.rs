@@ -1323,12 +1323,14 @@ async fn _webauthn_login(
                 // Update the credential counter
                 let mut updated_passkey = passkey;
                 if updated_passkey.update_credential(&authentication_result) == Some(true) {
-                    let _ = WebAuthnCredential::update_credential_by_uuid(
-                        &cred.uuid,
-                        serde_json::to_string(&updated_passkey).unwrap_or_default(),
-                        conn,
-                    )
-                    .await;
+                    drop(
+                        WebAuthnCredential::update_credential_by_uuid(
+                            &cred.uuid,
+                            serde_json::to_string(&updated_passkey).unwrap_or_default(),
+                            conn,
+                        )
+                        .await,
+                    );
                 }
                 matched_credential = Some(cred);
                 break;
