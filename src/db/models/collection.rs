@@ -116,7 +116,11 @@ impl Collection {
         } else {
             match Membership::find_confirmed_by_user_and_org(user_uuid, &self.org_uuid, conn).await {
                 Some(m) if m.has_full_access() => (false, false, m.atype >= MembershipType::Manager),
-                Some(m) if m.atype >= MembershipType::Manager && m.atype < MembershipType::Admin && self.is_manageable_by_user(user_uuid, conn).await => {
+                Some(m)
+                    if m.atype >= MembershipType::Manager
+                        && m.atype < MembershipType::Admin
+                        && self.is_manageable_by_user(user_uuid, conn).await =>
+                {
                     (false, false, true)
                 }
                 Some(m) => {

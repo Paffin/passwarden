@@ -605,7 +605,11 @@ impl Membership {
                         (
                             cu.read_only,
                             cu.hide_passwords,
-                            cu.manage || (self.atype >= MembershipType::Manager && self.atype < MembershipType::Admin && !cu.read_only && !cu.hide_passwords),
+                            cu.manage
+                                || (self.atype >= MembershipType::Manager
+                                    && self.atype < MembershipType::Admin
+                                    && !cu.read_only
+                                    && !cu.hide_passwords),
                         )
                     // If previous checks failed it might be that this user has access via a group, but we should not return those elements here
                     // Those are returned via a special group endpoint
@@ -1242,6 +1246,6 @@ mod tests {
         assert!(MembershipType::Manager > MembershipType::User);
         assert!(MembershipType::Custom == MembershipType::from_str("4").unwrap());
         // Custom and Manager have the same access level (PartialOrd) but are different variants (PartialEq)
-        assert!(MembershipType::Custom.cmp(&MembershipType::Manager) == std::cmp::Ordering::Equal);
+        assert!(MembershipType::Custom.cmp(&MembershipType::Manager) == Ordering::Equal);
     }
 }

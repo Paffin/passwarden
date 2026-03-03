@@ -520,7 +520,10 @@ async fn post_organization_collections(
         .await?;
     }
 
-    if headers.membership.atype >= MembershipType::Manager && headers.membership.atype < MembershipType::Admin && !headers.membership.access_all {
+    if headers.membership.atype >= MembershipType::Manager
+        && headers.membership.atype < MembershipType::Admin
+        && !headers.membership.access_all
+    {
         CollectionUser::save(&headers.membership.user_uuid, &collection.uuid, false, false, false, &conn).await?;
     }
 
@@ -1233,9 +1236,8 @@ async fn _reinvite_member(
         Invitation::take(&user.email, conn).await;
         let mut member = member;
         // If AutoConfirm policy is enabled, skip straight to Confirmed
-        let auto_confirm = OrgPolicy::find_by_org_and_type(org_id, OrgPolicyType::AutoConfirm, conn)
-            .await
-            .is_some_and(|p| p.enabled);
+        let auto_confirm =
+            OrgPolicy::find_by_org_and_type(org_id, OrgPolicyType::AutoConfirm, conn).await.is_some_and(|p| p.enabled);
         member.status = if auto_confirm {
             MembershipStatus::Confirmed as i32
         } else {
