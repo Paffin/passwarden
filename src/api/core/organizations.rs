@@ -520,7 +520,7 @@ async fn post_organization_collections(
         .await?;
     }
 
-    if headers.membership.atype == MembershipType::Manager && !headers.membership.access_all {
+    if headers.membership.atype >= MembershipType::Manager && headers.membership.atype < MembershipType::Admin && !headers.membership.access_all {
         CollectionUser::save(&headers.membership.user_uuid, &collection.uuid, false, false, false, &conn).await?;
     }
 
@@ -1010,12 +1010,8 @@ async fn send_invite(
     }
     let data: InviteData = data.into_inner();
 
-    // HACK: We need the raw user-type to be sure custom role is selected to determine the access_all permission
-    // The from_str() will convert the custom role type into a manager role type
-    let raw_type = &data.r#type.into_string();
-    // Membership::from_str will convert custom (4) to manager (3)
-    let new_type = match MembershipType::from_str(raw_type) {
-        Some(new_type) => new_type as i32,
+    let new_type = match MembershipType::from_str(&data.r#type.into_string()) {
+        Some(new_type) => new_type,
         None => err!("Invalid type"),
     };
 
@@ -1023,14 +1019,19 @@ async fn send_invite(
         err!("Only Owners can invite Managers, Admins or Owners")
     }
 
-    // HACK: This converts the Custom role which has the `Manage all collections` box checked into an access_all flag
-    // Since the parent checkbox is not sent to the server we need to check and verify the child checkboxes
-    // If the box is not checked, the user will still be a manager, but not with the access_all permission
+    // For Custom roles, derive access_all from the permissions payload
     let access_all = new_type >= MembershipType::Admin
-        || (raw_type.eq("4")
+        || (new_type == MembershipType::Custom
             && data.permissions.get("editAnyCollection") == Some(&json!(true))
             && data.permissions.get("deleteAnyCollection") == Some(&json!(true))
             && data.permissions.get("createNewCollections") == Some(&json!(true)));
+
+    // Persist permissions for Custom users
+    let permissions_json = if new_type == MembershipType::Custom {
+        Some(serde_json::to_string(&data.permissions).unwrap_or_default())
+    } else {
+        None
+    };
 
     let mut user_created: bool = false;
     for email in data.emails.iter() {
@@ -1060,7 +1061,15 @@ async fn send_invite(
                 } else {
                     // automatically accept existing users if mail is disabled
                     if !CONFIG.mail_enabled() && !user.password_hash.is_empty() {
-                        member_status = MembershipStatus::Accepted as i32;
+                        // If AutoConfirm policy is enabled, skip straight to Confirmed
+                        let auto_confirm = OrgPolicy::find_by_org_and_type(&org_id, OrgPolicyType::AutoConfirm, &conn)
+                            .await
+                            .map_or(false, |p| p.enabled);
+                        member_status = if auto_confirm {
+                            MembershipStatus::Confirmed as i32
+                        } else {
+                            MembershipStatus::Accepted as i32
+                        };
                     }
                     user
                 }
@@ -1069,8 +1078,9 @@ async fn send_invite(
 
         let mut new_member = Membership::new(user.uuid.clone(), org_id.clone(), Some(headers.user.email.clone()));
         new_member.access_all = access_all;
-        new_member.atype = new_type;
+        new_member.atype = new_type as i32;
         new_member.status = member_status;
+        new_member.permissions = permissions_json.clone();
         new_member.save(&conn).await?;
 
         if CONFIG.mail_enabled() {
@@ -1222,7 +1232,15 @@ async fn _reinvite_member(
     } else {
         Invitation::take(&user.email, conn).await;
         let mut member = member;
-        member.status = MembershipStatus::Accepted as i32;
+        // If AutoConfirm policy is enabled, skip straight to Confirmed
+        let auto_confirm = OrgPolicy::find_by_org_and_type(org_id, OrgPolicyType::AutoConfirm, conn)
+            .await
+            .map_or(false, |p| p.enabled);
+        member.status = if auto_confirm {
+            MembershipStatus::Confirmed as i32
+        } else {
+            MembershipStatus::Accepted as i32
+        };
         member.save(conn).await?;
     }
 
@@ -1498,22 +1516,23 @@ async fn edit_member(
     }
     let data: EditUserData = data.into_inner();
 
-    // HACK: We need the raw user-type to be sure custom role is selected to determine the access_all permission
-    // The from_str() will convert the custom role type into a manager role type
-    let raw_type = &data.r#type.into_string();
-    // MembershipType::from_str will convert custom (4) to manager (3)
-    let Some(new_type) = MembershipType::from_str(raw_type) else {
+    let Some(new_type) = MembershipType::from_str(&data.r#type.into_string()) else {
         err!("Invalid type")
     };
 
-    // HACK: This converts the Custom role which has the `Manage all collections` box checked into an access_all flag
-    // Since the parent checkbox is not sent to the server we need to check and verify the child checkboxes
-    // If the box is not checked, the user will still be a manager, but not with the access_all permission
+    // For Custom roles, derive access_all from the permissions payload
     let access_all = new_type >= MembershipType::Admin
-        || (raw_type.eq("4")
+        || (new_type == MembershipType::Custom
             && data.permissions.get("editAnyCollection") == Some(&json!(true))
             && data.permissions.get("deleteAnyCollection") == Some(&json!(true))
             && data.permissions.get("createNewCollections") == Some(&json!(true)));
+
+    // Persist permissions for Custom users
+    let permissions_json = if new_type == MembershipType::Custom {
+        Some(serde_json::to_string(&data.permissions).unwrap_or_default())
+    } else {
+        None
+    };
 
     let mut member_to_edit = match Membership::find_by_uuid_and_org(&member_id, &org_id, &conn).await {
         Some(member) => member,
@@ -1543,6 +1562,7 @@ async fn edit_member(
 
     member_to_edit.access_all = access_all;
     member_to_edit.atype = new_type as i32;
+    member_to_edit.permissions = permissions_json;
 
     // This check is also done at accept_invite, _confirm_invite, _activate_member, edit_member, admin::update_membership_type
     // We need to perform the check after changing the type since `admin` is exempt.

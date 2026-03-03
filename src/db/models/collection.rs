@@ -94,7 +94,7 @@ impl Collection {
                 Some(m) if m.has_full_access() => (false, false, m.atype >= MembershipType::Manager),
                 Some(m) => {
                     // Only let a manager manage collections when the have full read/write access
-                    let is_manager = m.atype == MembershipType::Manager;
+                    let is_manager = m.atype >= MembershipType::Manager && m.atype < MembershipType::Admin;
                     if let Some(cu) = cipher_sync_data.user_collections.get(&self.uuid) {
                         (
                             cu.read_only,
@@ -116,11 +116,11 @@ impl Collection {
         } else {
             match Membership::find_confirmed_by_user_and_org(user_uuid, &self.org_uuid, conn).await {
                 Some(m) if m.has_full_access() => (false, false, m.atype >= MembershipType::Manager),
-                Some(m) if m.atype == MembershipType::Manager && self.is_manageable_by_user(user_uuid, conn).await => {
+                Some(m) if m.atype >= MembershipType::Manager && m.atype < MembershipType::Admin && self.is_manageable_by_user(user_uuid, conn).await => {
                     (false, false, true)
                 }
                 Some(m) => {
-                    let is_manager = m.atype == MembershipType::Manager;
+                    let is_manager = m.atype >= MembershipType::Manager && m.atype < MembershipType::Admin;
                     let read_only = !self.is_writable_by_user(user_uuid, conn).await;
                     let hide_passwords = self.hide_passwords_for_user(user_uuid, conn).await;
                     (read_only, hide_passwords, is_manager && !read_only && !hide_passwords)
