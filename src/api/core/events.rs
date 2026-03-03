@@ -269,14 +269,14 @@ async fn _log_user_event(
     let ip_str = ip.to_string();
     crate::webhook::send_webhook(crate::webhook::build_event_payload(
         event_type,
-        Some(user_id.as_str()),
+        Some(String::as_str(user_id)),
         None,
         None,
         None,
         None,
         None,
-        Some(user_id.as_str()),
-        Some(&ip_str),
+        Some(String::as_str(user_id)),
+        Some(ip_str.as_str()),
     ));
 }
 
@@ -346,13 +346,13 @@ async fn _log_event(
     crate::webhook::send_webhook(crate::webhook::build_event_payload(
         event_type,
         None,
-        Some(org_id.as_str()),
+        Some(String::as_str(org_id)),
         event.cipher_uuid.as_deref().map(String::as_str),
         event.collection_uuid.as_deref().map(String::as_str),
         event.group_uuid.as_deref().map(String::as_str),
         event.org_user_uuid.as_deref().map(String::as_str),
-        Some(act_user_id.as_str()),
-        Some(&ip_str),
+        Some(String::as_str(act_user_id)),
+        Some(ip_str.as_str()),
     ));
 }
 
