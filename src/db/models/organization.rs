@@ -999,6 +999,7 @@ impl Membership {
         db_run! { conn: {
             users_organizations::table
                 .filter(users_organizations::user_uuid.eq(user_uuid))
+                .filter(users_organizations::status.eq(MembershipStatus::Confirmed as i32))
                 .select(users_organizations::org_uuid)
                 .load::<OrganizationId>(conn)
                 .unwrap_or_default()

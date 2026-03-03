@@ -284,6 +284,9 @@ async fn accept_org_invite(
         .map_or(false, |p| p.enabled);
 
     if auto_confirm {
+        // Note: member.akey (org encryption key) is not set here.
+        // An admin must still provide the key via the key exchange API for the
+        // user to decrypt org vault data. AutoConfirm only skips manual confirmation.
         member.status = MembershipStatus::Confirmed as i32;
     }
 
