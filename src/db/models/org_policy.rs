@@ -37,14 +37,14 @@ pub enum OrgPolicyType {
     ResetPassword = 8,
     // MaximumVaultTimeout = 9, // Not supported (Not AGPLv3 Licensed)
     // DisablePersonalVaultExport = 10, // Not supported (Not AGPLv3 Licensed)
-    // ActivateAutofill = 11,
-    // AutomaticAppLogIn = 12,
+    ActivateAutofill = 11,
+    AutomaticAppLogIn = 12,
     // FreeFamiliesSponsorshipPolicy = 13,
     RemoveUnlockWithPin = 14,
     RestrictedItemTypes = 15,
     UriMatchDefaults = 16,
     // AutotypeDefaultSetting = 17, // Not supported yet
-    // AutoConfirm = 18, // Not supported (not implemented yet)
+    AutoConfirm = 18,
     // BlockClaimedDomainAccountCreation = 19, // Not supported (Not AGPLv3 Licensed)
 }
 

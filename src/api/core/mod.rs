@@ -55,7 +55,7 @@ use crate::{
     api::{EmptyResult, JsonResult, Notify, UpdateType},
     auth::Headers,
     db::{
-        models::{Membership, MembershipStatus, OrgPolicy, Organization, User},
+        models::{Membership, MembershipStatus, OrgPolicy, OrgPolicyType, Organization, User},
         DbConn,
     },
     error::Error,
@@ -278,6 +278,15 @@ async fn accept_org_invite(
     // This check is also done at accept_invite, _confirm_invite, _activate_member, edit_member, admin::update_membership_type
     OrgPolicy::check_user_allowed(&member, "join", conn).await?;
 
+    // Check if the organization has AutoConfirm policy enabled
+    let auto_confirm = OrgPolicy::find_by_org_and_type(&member.org_uuid, OrgPolicyType::AutoConfirm, conn)
+        .await
+        .map_or(false, |p| p.enabled);
+
+    if auto_confirm {
+        member.status = MembershipStatus::Confirmed as i32;
+    }
+
     member.save(conn).await?;
 
     if crate::CONFIG.mail_enabled() {
@@ -285,9 +294,13 @@ async fn accept_org_invite(
             Some(org) => org,
             None => err!("Organization not found."),
         };
-        // User was invited to an organization, so they must be confirmed manually after acceptance
-        mail::send_invite_accepted(&user.email, &member.invited_by_email.unwrap_or(org.billing_email), &org.name)
-            .await?;
+        if auto_confirm {
+            mail::send_invite_confirmed(&user.email, &org.name).await?;
+        } else {
+            // User was invited to an organization, so they must be confirmed manually after acceptance
+            mail::send_invite_accepted(&user.email, &member.invited_by_email.unwrap_or(org.billing_email), &org.name)
+                .await?;
+        }
     }
 
     Ok(())
