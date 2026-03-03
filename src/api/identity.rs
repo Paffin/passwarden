@@ -1145,8 +1145,10 @@ fn _check_is_some<T>(value: &Option<T>, msg: &str) -> EmptyResult {
 // --- Passkey Login ---
 
 #[post("/webauthn/assertion-options")]
-async fn get_webauthn_assertion_options(conn: DbConn) -> JsonResult {
+async fn get_webauthn_assertion_options(ip: ClientIp, conn: DbConn) -> JsonResult {
     use crate::api::core::two_factor::webauthn::WEBAUTHN;
+
+    crate::ratelimit::check_limit_login(&ip.ip)?;
 
     if !CONFIG.domain_set() {
         err!("`DOMAIN` environment variable is not set. Passkey login disabled")
@@ -1300,14 +1302,12 @@ async fn _webauthn_login(data: ConnectData, user_id: &mut Option<UserId>, conn: 
                 // Update the credential counter
                 let mut updated_passkey = passkey;
                 if updated_passkey.update_credential(&authentication_result) == Some(true) {
-                    drop(
-                        WebAuthnCredential::update_credential_by_uuid(
-                            &cred.uuid,
-                            serde_json::to_string(&updated_passkey).unwrap_or_default(),
-                            conn,
-                        )
-                        .await,
-                    );
+                    WebAuthnCredential::update_credential_by_uuid(
+                        &cred.uuid,
+                        serde_json::to_string(&updated_passkey)?,
+                        conn,
+                    )
+                    .await?;
                 }
                 matched_credential = Some(cred);
                 break;
