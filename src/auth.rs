@@ -1103,6 +1103,7 @@ pub enum AuthMethod {
     Password,
     Sso,
     UserApiKey,
+    WebAuthn,
 }
 
 impl AuthMethod {
@@ -1112,6 +1113,7 @@ impl AuthMethod {
             AuthMethod::Password => "api offline_access".to_string(),
             AuthMethod::Sso => "api offline_access".to_string(),
             AuthMethod::UserApiKey => "api".to_string(),
+            AuthMethod::WebAuthn => "api offline_access".to_string(),
         }
     }
 

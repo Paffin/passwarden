@@ -362,6 +362,20 @@ table! {
     }
 }
 
+table! {
+    web_authn_credentials (uuid) {
+        uuid -> Text,
+        user_uuid -> Text,
+        name -> Text,
+        credential -> Text,
+        supports_prf -> Bool,
+        encrypted_user_key -> Nullable<Text>,
+        encrypted_public_key -> Nullable<Text>,
+        encrypted_private_key -> Nullable<Text>,
+    }
+}
+
+joinable!(web_authn_credentials -> users (user_uuid));
 joinable!(ciphers_tags -> ciphers (cipher_uuid));
 joinable!(ciphers_tags -> tags (tag_uuid));
 joinable!(tags -> users (user_uuid));
@@ -421,4 +435,5 @@ allow_tables_to_appear_in_same_query!(
     auth_requests,
     tags,
     ciphers_tags,
+    web_authn_credentials,
 );

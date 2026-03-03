@@ -4,6 +4,7 @@ mod emergency_access;
 mod events;
 mod folders;
 mod organizations;
+mod passkeys;
 mod public;
 mod sends;
 mod tags;
@@ -19,7 +20,7 @@ pub use sends::purge_sends;
 pub fn routes() -> Vec<Route> {
     let mut eq_domains_routes = routes![get_eq_domains, post_eq_domains, put_eq_domains];
     let mut hibp_routes = routes![hibp_breach];
-    let mut meta_routes = routes![alive, now, version, config, get_api_webauthn];
+    let mut meta_routes = routes![alive, now, version, config];
 
     let mut routes = Vec::new();
     routes.append(&mut accounts::routes());
@@ -31,6 +32,7 @@ pub fn routes() -> Vec<Route> {
     routes.append(&mut organizations::routes());
     routes.append(&mut two_factor::routes());
     routes.append(&mut sends::routes());
+    routes.append(&mut passkeys::routes());
     routes.append(&mut public::routes());
     routes.append(&mut eq_domains_routes);
     routes.append(&mut hibp_routes);
@@ -183,18 +185,6 @@ pub fn now() -> Json<String> {
 #[get("/version")]
 fn version() -> Json<&'static str> {
     Json(crate::VERSION.unwrap_or_default())
-}
-
-#[get("/webauthn")]
-fn get_api_webauthn(_headers: Headers) -> Json<Value> {
-    // Prevent a 404 error, which also causes key-rotation issues
-    // It looks like this is used when login with passkeys is enabled, which Vaultwarden does not (yet) support
-    // An empty list/data also works fine
-    Json(json!({
-        "object": "list",
-        "data": [],
-        "continuationToken": null
-    }))
 }
 
 #[get("/config")]
