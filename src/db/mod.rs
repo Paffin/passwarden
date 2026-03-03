@@ -457,9 +457,9 @@ fn backup_mysql(db_url: &str) -> Result<String, Error> {
         cmd.env("MYSQL_PWD", password);
     }
 
-    let output = cmd.output().map_err(|e| {
-        Error::new_msg(format!("Failed to execute mysqldump (is it installed and in PATH?): {e}"))
-    })?;
+    let output = cmd
+        .output()
+        .map_err(|e| Error::new_msg(format!("Failed to execute mysqldump (is it installed and in PATH?): {e}")))?;
 
     if output.status.success() {
         Ok(backup_file)
@@ -500,9 +500,9 @@ fn backup_postgresql(db_url: &str) -> Result<String, Error> {
         cmd.env("PGPASSWORD", password);
     }
 
-    let output = cmd.output().map_err(|e| {
-        Error::new_msg(format!("Failed to execute pg_dump (is it installed and in PATH?): {e}"))
-    })?;
+    let output = cmd
+        .output()
+        .map_err(|e| Error::new_msg(format!("Failed to execute pg_dump (is it installed and in PATH?): {e}")))?;
 
     if output.status.success() {
         Ok(backup_file)

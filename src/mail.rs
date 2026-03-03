@@ -522,7 +522,13 @@ pub async fn send_new_device_logged_in(address: &str, ip: &str, dt: &NaiveDateTi
     send_email(address, &subject, body_html, body_text).await
 }
 
-pub async fn send_device_verification(address: &str, token: &str, ip: &str, dt: &NaiveDateTime, device: &Device) -> EmptyResult {
+pub async fn send_device_verification(
+    address: &str,
+    token: &str,
+    ip: &str,
+    dt: &NaiveDateTime,
+    device: &Device,
+) -> EmptyResult {
     use crate::util::upcase_first;
 
     let fmt = "%A, %B %_d, %Y at %r %Z";

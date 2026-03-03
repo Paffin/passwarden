@@ -150,8 +150,7 @@ async fn sync(data: SyncData, headers: Headers, client_version: Option<ClientVer
     let folders_json: Vec<Value> =
         Folder::find_by_user(&headers.user.uuid, &conn).await.iter().map(Folder::to_json).collect();
 
-    let tags_json: Vec<Value> =
-        Tag::find_by_user(&headers.user.uuid, &conn).await.iter().map(Tag::to_json).collect();
+    let tags_json: Vec<Value> = Tag::find_by_user(&headers.user.uuid, &conn).await.iter().map(Tag::to_json).collect();
 
     let sends_json: Vec<Value> =
         Send::find_by_user(&headers.user.uuid, &conn).await.iter().map(Send::to_json).collect();

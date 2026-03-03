@@ -5,8 +5,7 @@ use diesel::prelude::*;
 use serde_json::Value;
 
 use super::{
-    Cipher, Device, EmergencyAccess, Favorite, Folder, Membership, MembershipType, Tag, TwoFactor,
-    TwoFactorIncomplete,
+    Cipher, Device, EmergencyAccess, Favorite, Folder, Membership, MembershipType, Tag, TwoFactor, TwoFactorIncomplete,
 };
 use crate::{
     api::EmptyResult,

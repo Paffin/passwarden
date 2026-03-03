@@ -68,13 +68,7 @@ async fn post_tag(tag_id: TagId, data: Json<TagData>, headers: Headers, conn: Db
 }
 
 #[put("/tags/<tag_id>", data = "<data>")]
-async fn put_tag(
-    tag_id: TagId,
-    data: Json<TagData>,
-    headers: Headers,
-    conn: DbConn,
-    nt: Notify<'_>,
-) -> JsonResult {
+async fn put_tag(tag_id: TagId, data: Json<TagData>, headers: Headers, conn: DbConn, nt: Notify<'_>) -> JsonResult {
     let data: TagData = data.into_inner();
 
     let Some(mut tag) = Tag::find_by_uuid_and_user(&tag_id, &headers.user.uuid, &conn).await else {

@@ -447,7 +447,9 @@ async fn authenticated_response(
             let token = device.generate_verification_token();
             device.save(false, conn).await?;
 
-            if let Err(e) = mail::send_device_verification(&user.email, &token, &ip.ip.to_string(), &now, device).await {
+            if let Err(e) =
+                mail::send_device_verification(&user.email, &token, &ip.ip.to_string(), &now, device).await
+            {
                 error!("Error sending device verification email: {e:#?}");
                 err!(
                     "Could not send device verification email. Please contact your administrator.",
@@ -1102,7 +1104,8 @@ async fn verify_device(token: &str, conn: DbConn) -> ApiResult<rocket::response:
         "<html><body style=\"font-family: sans-serif; text-align: center; padding: 50px;\">
         <h2>Device Verified</h2>
         <p>Your device has been successfully verified. You can now log in.</p>
-        </body></html>".to_string()
+        </body></html>"
+            .to_string(),
     ))
 }
 
