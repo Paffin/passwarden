@@ -13,7 +13,7 @@ use tokio::sync::RwLock;
 use crate::{
     api::{ApiResult, EmptyResult, UpdateType},
     db::{
-        models::{AuthRequestId, Cipher, Device, DeviceId, Folder, PushId, Send, User, UserId},
+        models::{AuthRequestId, Cipher, Device, DeviceId, Folder, Membership, PushId, Send, User, UserId},
         DbConn,
     },
     http_client::make_http_request,
@@ -102,6 +102,9 @@ pub async fn register_push_device(device: &mut Device, conn: &DbConn) -> EmptyRe
         device.push_uuid = Some(PushId(get_uuid()));
     }
 
+    // Query user's organization memberships for push registration
+    let org_ids = Membership::get_orgs_by_user(&device.user_uuid, conn).await;
+
     //Needed to register a device for push to bitwarden :
     let data = json!({
         "deviceId": device.push_uuid, // Unique UUID per user/device
@@ -109,7 +112,7 @@ pub async fn register_push_device(device: &mut Device, conn: &DbConn) -> EmptyRe
         "userId": device.user_uuid,
         "type": device.atype,
         "identifier": device.uuid,    // Unique UUID of the device/app, determined by the device/app it self currently registering
-        // "organizationIds:" [] // TODO: This is not yet implemented by Vaultwarden!
+        "organizationIds": org_ids,
         "installationId": CONFIG.push_installation_id(),
     });
 
