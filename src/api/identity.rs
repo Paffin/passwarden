@@ -1155,7 +1155,7 @@ async fn get_webauthn_assertion_options(conn: DbConn) -> JsonResult {
     // Load ALL passkey credentials from the database.
     // webauthn-rs 0.5.x doesn't have discoverable authentication API,
     // so we use start_passkey_authentication with all known credentials.
-    let all_credentials = WebAuthnCredential::find_all(conn).await;
+    let all_credentials = WebAuthnCredential::find_all(&conn).await;
     let passkeys: Vec<Passkey> = all_credentials
         .iter()
         .filter_map(|c| serde_json::from_str(&c.credential).ok())
@@ -1357,8 +1357,8 @@ async fn _webauthn_login(
     // Add WebAuthnPrfOption to UserDecryptionOptions if PRF keys are available
     if matched_credential.supports_prf {
         if let Some(obj) = result.as_object_mut() {
-            if let Some(udo) = obj.get_mut("UserDecryptionOptions").and_then(|v| v.as_object_mut()) {
-                udo.insert(
+            if let Some(decryption_opts) = obj.get_mut("UserDecryptionOptions").and_then(|v| v.as_object_mut()) {
+                decryption_opts.insert(
                     "WebAuthnPrfOption".to_string(),
                     json!({
                         "EncryptedPrivateKey": matched_credential.encrypted_private_key,
