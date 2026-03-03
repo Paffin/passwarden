@@ -325,7 +325,7 @@ impl Cipher {
             Cow::from(self.get_admin_collections(user_uuid.clone(), conn).await)
         };
 
-        let tag_ids: Cow<'_, Vec<TagId>> = if let Some(cipher_sync_data) = cipher_sync_data {
+        let tag_ids: Cow<'_, [TagId]> = if let Some(cipher_sync_data) = cipher_sync_data {
             if let Some(cipher_tags) = cipher_sync_data.cipher_tags.get(&self.uuid) {
                 Cow::Borrowed(cipher_tags)
             } else {

@@ -78,6 +78,7 @@ async fn _send_webhook(url: &str, secret: &str, event_data: &Value) -> Result<()
 }
 
 /// Build event JSON payload for webhook delivery
+#[allow(clippy::too_many_arguments)]
 pub fn build_event_payload(
     event_type: i32,
     user_uuid: Option<&str>,
