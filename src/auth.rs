@@ -1234,7 +1234,10 @@ pub async fn refresh_tokens(
         Some(device) => device,
     };
 
-    // Save to update `updated_at`.
+    // Rotate the refresh token to prevent replay attacks.
+    // The old token is kept as previous_refresh_token for a grace period
+    // to handle concurrent requests and network retries.
+    device.rotate_refresh_token();
     device.save(true, conn).await?;
 
     let user = match User::find_by_uuid(&device.user_uuid, conn).await {

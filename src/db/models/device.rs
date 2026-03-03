@@ -34,6 +34,8 @@ pub struct Device {
 
     pub verified: bool,
     pub verification_token: Option<String>,
+
+    pub previous_refresh_token: Option<String>,
 }
 
 /// Local methods
@@ -57,6 +59,8 @@ impl Device {
 
             verified: true,
             verification_token: None,
+
+            previous_refresh_token: None,
         }
     }
 
@@ -110,6 +114,13 @@ impl Device {
 
     pub fn is_mobile(&self) -> bool {
         matches!(DeviceType::from_i32(self.atype), DeviceType::Android | DeviceType::Ios)
+    }
+
+    /// Rotate the refresh token: move current token to previous and set a new one.
+    /// This protects against replay attacks by invalidating old tokens.
+    pub fn rotate_refresh_token(&mut self) {
+        self.previous_refresh_token = Some(self.refresh_token.clone());
+        self.refresh_token = crypto::encode_random_bytes::<64>(&BASE64URL);
     }
 }
 
@@ -247,7 +258,10 @@ impl Device {
     pub async fn find_by_refresh_token(refresh_token: &str, conn: &DbConn) -> Option<Self> {
         db_run! { conn: {
             devices::table
-                .filter(devices::refresh_token.eq(refresh_token))
+                .filter(
+                    devices::refresh_token.eq(refresh_token)
+                    .or(devices::previous_refresh_token.eq(refresh_token))
+                )
                 .first::<Self>(conn)
                 .ok()
         }}

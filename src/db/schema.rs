@@ -57,6 +57,7 @@ table! {
         twofactor_remember -> Nullable<Text>,
         verified -> Bool,
         verification_token -> Nullable<Text>,
+        previous_refresh_token -> Nullable<Text>,
     }
 }
 
@@ -244,6 +245,7 @@ table! {
         atype -> Integer,
         reset_password_key -> Nullable<Text>,
         external_id -> Nullable<Text>,
+        permissions -> Nullable<Text>,
     }
 }
 
