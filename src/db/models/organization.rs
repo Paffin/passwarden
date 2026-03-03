@@ -1241,6 +1241,7 @@ mod tests {
         assert!(MembershipType::Admin > MembershipType::Manager);
         assert!(MembershipType::Manager > MembershipType::User);
         assert!(MembershipType::Custom == MembershipType::from_str("4").unwrap());
-        assert!(MembershipType::Custom == MembershipType::Manager); // Same access level
+        // Custom and Manager have the same access level (PartialOrd) but are different variants (PartialEq)
+        assert!(MembershipType::Custom.cmp(&MembershipType::Manager) == std::cmp::Ordering::Equal);
     }
 }

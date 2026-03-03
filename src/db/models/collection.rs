@@ -853,7 +853,6 @@ impl CollectionMembership {
             "manage": membership_type >= MembershipType::Admin
                 || self.manage
                 || (membership_type >= MembershipType::Manager
-                    && membership_type < MembershipType::Admin
                     && !self.read_only
                     && !self.hide_passwords),
         })

@@ -1064,7 +1064,7 @@ async fn send_invite(
                         // If AutoConfirm policy is enabled, skip straight to Confirmed
                         let auto_confirm = OrgPolicy::find_by_org_and_type(&org_id, OrgPolicyType::AutoConfirm, &conn)
                             .await
-                            .map_or(false, |p| p.enabled);
+                            .is_some_and(|p| p.enabled);
                         member_status = if auto_confirm {
                             MembershipStatus::Confirmed as i32
                         } else {
@@ -1235,7 +1235,7 @@ async fn _reinvite_member(
         // If AutoConfirm policy is enabled, skip straight to Confirmed
         let auto_confirm = OrgPolicy::find_by_org_and_type(org_id, OrgPolicyType::AutoConfirm, conn)
             .await
-            .map_or(false, |p| p.enabled);
+            .is_some_and(|p| p.enabled);
         member.status = if auto_confirm {
             MembershipStatus::Confirmed as i32
         } else {

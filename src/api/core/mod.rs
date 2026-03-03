@@ -281,7 +281,7 @@ async fn accept_org_invite(
     // Check if the organization has AutoConfirm policy enabled
     let auto_confirm = OrgPolicy::find_by_org_and_type(&member.org_uuid, OrgPolicyType::AutoConfirm, conn)
         .await
-        .map_or(false, |p| p.enabled);
+        .is_some_and(|p| p.enabled);
 
     if auto_confirm {
         // Note: member.akey (org encryption key) is not set here.
