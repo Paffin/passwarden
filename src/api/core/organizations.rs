@@ -1019,7 +1019,7 @@ async fn send_invite(
     };
 
     if new_type != MembershipType::User && headers.membership_type != MembershipType::Owner {
-        err!("Only Owners can invite Managers, Admins or Owners")
+        err!("Only Owners can invite Managers, Admins, Custom or Owners")
     }
 
     // For Custom roles, derive access_all from the permissions payload
